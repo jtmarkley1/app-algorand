@@ -76,6 +76,7 @@ static int step_sender() {
   algorand_key_derive(current_txn.accountId, &privateKey);
   algorand_public_key(&privateKey, publicKey);
   if (os_memcmp(publicKey, current_txn.sender, sizeof(current_txn.sender)) == 0) {
+    ux_approve_txn();
     return 0;
   }
 
@@ -107,10 +108,12 @@ static const uint8_t default_genesisHash[] = {
 
 static int step_genesisID() {
   if (strncmp(current_txn.genesisID, default_genesisID, sizeof(current_txn.genesisID)) == 0) {
+    ux_approve_txn();
     return 0;
   }
 
   if (current_txn.genesisID[0] == '\0') {
+    ux_approve_txn();
     return 0;
   }
 
@@ -120,12 +123,14 @@ static int step_genesisID() {
 
 static int step_genesisHash() {
   if (all_zero_key(current_txn.genesisHash)) {
+    ux_approve_txn();
     return 0;
   }
 
   if (strncmp(current_txn.genesisID, default_genesisID, sizeof(current_txn.genesisID)) == 0 ||
       current_txn.genesisID[0] == '\0') {
     if (os_memcmp(current_txn.genesisHash, default_genesisHash, sizeof(current_txn.genesisHash)) == 0) {
+      ux_approve_txn();
       return 0;
     }
   }
@@ -138,6 +143,7 @@ static int step_genesisHash() {
 
 static int step_note() {
   if (current_txn.note_len == 0) {
+    ux_approve_txn();
     return 0;
   }
 
@@ -161,6 +167,7 @@ static int step_amount() {
 
 static int step_close() {
   if (all_zero_key(current_txn.payment.close)) {
+    ux_approve_txn();
     return 0;
   }
 
@@ -196,6 +203,7 @@ static int step_asset_xfer_amount() {
 
 static int step_asset_xfer_sender() {
   if (all_zero_key(current_txn.asset_xfer.sender)) {
+    ux_approve_txn();
     return 0;
   }
 
@@ -207,6 +215,7 @@ static int step_asset_xfer_sender() {
 
 static int step_asset_xfer_receiver() {
   if (all_zero_key(current_txn.asset_xfer.receiver)) {
+    ux_approve_txn();
     return 0;
   }
 
@@ -218,6 +227,7 @@ static int step_asset_xfer_receiver() {
 
 static int step_asset_xfer_close() {
   if (all_zero_key(current_txn.asset_xfer.close)) {
+    ux_approve_txn();
     return 0;
   }
 
@@ -234,6 +244,7 @@ static int step_asset_freeze_id() {
 
 static int step_asset_freeze_account() {
   if (all_zero_key(current_txn.asset_freeze.account)) {
+    ux_approve_txn();
     return 0;
   }
 
@@ -263,6 +274,7 @@ static int step_asset_config_id() {
 
 static int step_asset_config_total() {
   if (current_txn.asset_config.id != 0 && current_txn.asset_config.params.total == 0) {
+    ux_approve_txn();
     return 0;
   }
 
@@ -272,6 +284,7 @@ static int step_asset_config_total() {
 
 static int step_asset_config_default_frozen() {
   if (current_txn.asset_config.id != 0 && current_txn.asset_config.params.default_frozen == 0) {
+    ux_approve_txn();
     return 0;
   }
 
@@ -285,6 +298,7 @@ static int step_asset_config_default_frozen() {
 
 static int step_asset_config_unitname() {
   if (current_txn.asset_config.params.unitname[0] == '\0') {
+    ux_approve_txn();
     return 0;
   }
 
@@ -294,6 +308,7 @@ static int step_asset_config_unitname() {
 
 static int step_asset_config_decimals() {
   if (current_txn.asset_config.params.decimals == 0) {
+    ux_approve_txn();
     return 0;
   }
 
@@ -303,6 +318,7 @@ static int step_asset_config_decimals() {
 
 static int step_asset_config_assetname() {
   if (current_txn.asset_config.params.assetname[0] == '\0') {
+    ux_approve_txn();
     return 0;
   }
 
@@ -312,6 +328,7 @@ static int step_asset_config_assetname() {
 
 static int step_asset_config_url() {
   if (current_txn.asset_config.params.url[0] == '\0') {
+    ux_approve_txn();
     return 0;
   }
 
@@ -321,6 +338,7 @@ static int step_asset_config_url() {
 
 static int step_asset_config_metadata_hash() {
   if (all_zero_key(current_txn.asset_config.params.metadata_hash)) {
+    ux_approve_txn();
     return 0;
   }
 
@@ -401,7 +419,7 @@ ALGO_UX_STEP_NOCB_INIT(ASSET_CONFIG, 32, bnnn_paging, step_asset_config_clawback
 ALGO_UX_STEP(33, pbb, NULL, 0, txn_approve(), NULL, {&C_icon_validate_14, "Sign",   "transaction"});
 ALGO_UX_STEP(34, pbb, NULL, 0, user_approval_denied(),    NULL, {&C_icon_crossmark,   "Cancel", "signature"});
 
-const ux_flow_step_t * const ux_txn_flow [] = {
+UX_FLOW(ux_txn_flow,
   &txn_flow_0,
   &txn_flow_1,
   &txn_flow_2,
@@ -434,15 +452,15 @@ const ux_flow_step_t * const ux_txn_flow [] = {
   &txn_flow_29,
   &txn_flow_30,
   &txn_flow_31,
-  &txn_flow_32,
+  &txn_flow_32
+);
+
+UX_FLOW(ux_approve_txn_flow,
   &txn_flow_33,
-  &txn_flow_34,
-  FLOW_END_STEP,
-};
+  &txn_flow_34
+);
 
-
-void
-ui_txn()
+void ui_txn()
 {
   PRINTF("Transaction:\n");
   PRINTF("  Type: %d\n", current_txn.type);
@@ -467,4 +485,12 @@ ui_txn()
     ux_stack_push();
   }
   ux_flow_init(0, ux_txn_flow, NULL);
+}
+
+void ux_approve_txn()
+{
+  if (G_ux.stack_count == 0) {
+    ux_stack_push();
+  }
+  ux_flow_init(0, ux_approve_txn_flow, NULL);
 }

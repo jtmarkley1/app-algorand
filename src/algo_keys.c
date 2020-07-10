@@ -8,8 +8,8 @@
 void
 algorand_key_derive(uint32_t accountId, cx_ecfp_private_key_t *privateKey)
 {
-  static uint8_t  privateKeyData[64];
-  static uint32_t bip32Path[5];
+  uint8_t  privateKeyData[64];
+  uint32_t bip32Path[5];
 
   bip32Path[0] = 44  | 0x80000000;
   bip32Path[1] = 283 | 0x80000000;
