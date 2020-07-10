@@ -24,11 +24,12 @@ UX_FLOW_DEF_NOCB(
     });
 UX_FLOW_DEF_VALID(
     ux_display_public_flow_3_step,
-    pb,
+    pbb,
     address_approve(),
     {
       &C_icon_validate_14,
       "Approve",
+      "address",
     });
 UX_FLOW_DEF_VALID(
     ux_display_public_flow_4_step,
