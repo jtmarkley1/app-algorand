@@ -1,6 +1,4 @@
-#if defined(TARGET_NANOX)
 #include "ux.h"
-#endif // TARGET_NANOX
 
 extern char lineBuffer[];
 extern char text[128];
@@ -17,7 +15,6 @@ int  ui_text_more();
 void step_address();
 
 // Override some of the Ledger X UI macros to enable step skipping
-#if defined(TARGET_NANOX)
 
 // If going backwards, skip backwards. Otherwise, skip forwards.
 #define SKIPEMPTY(stepnum) \
@@ -58,5 +55,3 @@ void step_address();
           txn_flow_ ## stepnum ## _validate, \
           error_flow, \
         }
-
-#endif // TARGET_NANOX

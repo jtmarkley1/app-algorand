@@ -113,11 +113,6 @@ algorand_main(void)
 
   msgpack_next_off = 0;
 
-#if defined(TARGET_NANOS)
-  // next timer callback in 500 ms
-  UX_CALLBACK_SET_INTERVAL(500);
-#endif
-
   // DESIGN NOTE: the bootloader ignores the way APDU are fetched. The only
   // goal is to retrieve APDU.
   // When APDU are to be fetched from multiple IOs, like NFC+USB+BLE, make
@@ -350,12 +345,6 @@ unsigned char io_event(unsigned char channel) {
   case SEPROXYHAL_TAG_TICKER_EVENT:
     UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer,
     {
-#if defined(TARGET_NANOS)
-      // defaulty retrig very soon (will be overriden during
-      // stepper_prepro)
-      UX_CALLBACK_SET_INTERVAL(500);
-      UX_REDISPLAY();
-#endif
     });
     break;
   }
@@ -421,10 +410,6 @@ main(void)
 
   for (;;) {
     UX_INIT();
-
-#if defined(TARGET_NANOS)
-    UX_MENU_INIT();
-#endif
 
     BEGIN_TRY {
       TRY {

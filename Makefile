@@ -31,7 +31,6 @@ DEFINES += HAVE_BAGL HAVE_SPRINTF
 DEFINES += HAVE_BOLOS_APP_STACK_CANARY
 
 ifeq ($(TARGET_NAME),TARGET_NANOS)
-DEFINES += HAVE_UX_LEGACY
 DEFINES += IO_SEPROXYHAL_BUFFER_SIZE_B=128
 else ifeq ($(TARGET_NAME),TARGET_NANOX)
 DEFINES += IO_SEPROXYHAL_BUFFER_SIZE_B=300
@@ -94,7 +93,7 @@ $(info GCCPATH is not set: arm-none-eabi-* will be used from PATH)
 endif
 
 CC := $(CLANGPATH)clang
-CFLAGS += -O3 -Os
+CFLAGS += -O3 -Os -I/usr/include
 
 AS := $(GCCPATH)arm-none-eabi-gcc
 AFLAGS +=
@@ -102,6 +101,16 @@ AFLAGS +=
 LD := $(GCCPATH)arm-none-eabi-gcc
 LDFLAGS += -O3 -Os
 LDLIBS += -lm -lgcc -lc
+
+ifeq ($(TARGET_NAME),TARGET_NANOS)
+
+        ifneq "$(wildcard $(BOLOS_SDK)/lib_ux/src/ux_flow_engine.c)" ""
+                SDK_SOURCE_PATH  += lib_ux
+                DEFINES		       += HAVE_UX_FLOW		
+                DEFINES += HAVE_WALLET_ID_SDK 
+        endif
+
+endif
 
 # Main rules
 
