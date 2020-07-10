@@ -4,6 +4,7 @@
 
 #include "algo_keys.h"
 #include "algo_ui.h"
+#include "algo_addr.h"
 #include "algo_tx.h"
 
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
@@ -20,6 +21,7 @@ unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 #define P1_FIRST 0x00
 #define P1_MORE  0x80
 #define P1_WITH_ACCOUNT_ID  0x01
+#define P1_WITH_REQUEST_USER_APPROVAL  0x80
 #define P2_LAST  0x00
 #define P2_MORE  0x80
 
@@ -84,8 +86,22 @@ txn_approve()
   ui_idle();
 }
 
+void address_approve()
+{
+  unsigned int tx = ALGORAND_PUBLIC_KEY_SIZE;
+
+  G_io_apdu_buffer[tx++] = 0x90;
+  G_io_apdu_buffer[tx++] = 0x00;
+
+  // Send back the response, do not restart the event loop
+  io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, tx);
+
+  // Display back the original UX
+  ui_idle();
+}
+
 void
-txn_deny()
+user_approval_denied()
 {
   G_io_apdu_buffer[0] = 0x69;
   G_io_apdu_buffer[1] = 0x85;
@@ -252,7 +268,9 @@ algorand_main(void)
 
         case INS_GET_PUBLIC_KEY: {
           cx_ecfp_private_key_t privateKey;
-          uint32_t              accountId = 0;
+          uint32_t accountId = 0;
+          char checksummed[65];
+          uint8_t user_approval_required = G_io_apdu_buffer[OFFSET_P1] == P1_WITH_REQUEST_USER_APPROVAL;
 
           if (rx > OFFSET_LC) {
               uint8_t lc = G_io_apdu_buffer[OFFSET_LC];
@@ -268,8 +286,19 @@ algorand_main(void)
            * and return pushed buffer length.
            */
           algorand_key_derive(accountId, &privateKey);
-          tx = algorand_public_key(&privateKey, G_io_apdu_buffer);
-          THROW(0x9000);
+          algorand_public_key(&privateKey, G_io_apdu_buffer);
+          memset(&privateKey, 0, sizeof(privateKey));
+
+          if(user_approval_required){
+            checksummed_addr(G_io_apdu_buffer, checksummed);
+            ui_text_put(checksummed);
+            ui_address_approval();
+            flags |= IO_ASYNCH_REPLY;
+          }
+          else{
+            tx = ALGORAND_PUBLIC_KEY_SIZE;
+            THROW(0x9000);
+          }
         } break;
 
         case 0xFF: // return to dashboard

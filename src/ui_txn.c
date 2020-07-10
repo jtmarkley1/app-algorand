@@ -399,7 +399,7 @@ ALGO_UX_STEP_NOCB_INIT(ASSET_CONFIG, 31, bnnn_paging, step_asset_config_freeze()
 ALGO_UX_STEP_NOCB_INIT(ASSET_CONFIG, 32, bnnn_paging, step_asset_config_clawback(),       {"Clawback",       text});
 
 ALGO_UX_STEP(33, pbb, NULL, 0, txn_approve(), NULL, {&C_icon_validate_14, "Sign",   "transaction"});
-ALGO_UX_STEP(34, pbb, NULL, 0, txn_deny(),    NULL, {&C_icon_crossmark,   "Cancel", "signature"});
+ALGO_UX_STEP(34, pbb, NULL, 0, user_approval_denied(),    NULL, {&C_icon_crossmark,   "Cancel", "signature"});
 
 const ux_flow_step_t * const ux_txn_flow [] = {
   &txn_flow_0,

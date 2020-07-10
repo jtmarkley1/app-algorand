@@ -102,4 +102,5 @@ extern struct txn current_txn;
 
 // Two callbacks into the main code: approve and deny signing.
 void txn_approve();
-void txn_deny();
+void address_approve();
+void user_approval_denied();

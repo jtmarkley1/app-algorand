@@ -2,18 +2,54 @@
 #include "os_io_seproxyhal.h"
 
 #include "algo_ui.h"
+#include "algo_tx.h"
 #include "algo_keys.h"
 #include "algo_addr.h"
 
-void
-step_address()
-{
-  char checksummed[65];
-  uint8_t publicKey[32];
-  cx_ecfp_private_key_t privateKey;
 
-  algorand_key_derive(0, &privateKey);
-  algorand_public_key(&privateKey, publicKey);
-  checksummed_addr(publicKey, checksummed);
-  ui_text_put(checksummed);
+UX_FLOW_DEF_NOCB(
+    ux_display_public_flow_1_step,
+    pnn,
+    {
+      &C_icon_eye,
+      "Verify",
+      "address",
+    });
+UX_FLOW_DEF_NOCB(
+    ux_display_public_flow_2_step,
+    bnnn_paging,
+    {
+      .title = "Address",
+      .text = text,
+    });
+UX_FLOW_DEF_VALID(
+    ux_display_public_flow_3_step,
+    pb,
+    address_approve(),
+    {
+      &C_icon_validate_14,
+      "Approve",
+    });
+UX_FLOW_DEF_VALID(
+    ux_display_public_flow_4_step,
+    pb,
+    user_approval_denied(),
+    {
+      &C_icon_crossmark,
+      "Reject",
+    });
+
+UX_FLOW(ux_address_approval_flow,
+  &ux_display_public_flow_1_step,
+  &ux_display_public_flow_2_step,
+  &ux_display_public_flow_3_step,
+  &ux_display_public_flow_4_step
+);
+
+void ui_address_approval()
+{
+  if (G_ux.stack_count == 0) {
+    ux_stack_push();
+  }
+  ux_flow_init(0, ux_address_approval_flow, NULL);
 }
