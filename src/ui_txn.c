@@ -380,8 +380,8 @@ static unsigned int ux_last_step;
 ALGO_UX_STEP_NOCB_INIT(ALL_TYPES, 0, bn,          step_txn_type(),    {"Txn type",     text});
 ALGO_UX_STEP_NOCB_INIT(ALL_TYPES, 1, bnnn_paging, step_sender(),      {"Sender",       text});
 ALGO_UX_STEP_NOCB_INIT(ALL_TYPES, 2, bn,          step_fee(),         {"Fee (uAlg)",   text});
-ALGO_UX_STEP_NOCB_INIT(ALL_TYPES, 3, bn,          step_firstvalid(),  {"First valid",  text});
-ALGO_UX_STEP_NOCB_INIT(ALL_TYPES, 4, bn,          step_lastvalid(),   {"Last valid",   text});
+// ALGO_UX_STEP_NOCB_INIT(ALL_TYPES, 3, bn,          step_firstvalid(),  {"First valid",  text});
+// ALGO_UX_STEP_NOCB_INIT(ALL_TYPES, 4, bn,          step_lastvalid(),   {"Last valid",   text});
 ALGO_UX_STEP_NOCB_INIT(ALL_TYPES, 5, bn,          step_genesisID(),   {"Genesis ID",   text});
 ALGO_UX_STEP_NOCB_INIT(ALL_TYPES, 6, bnnn_paging, step_genesisHash(), {"Genesis hash", text});
 ALGO_UX_STEP_NOCB_INIT(ALL_TYPES, 7, bn,          step_note(),        {"Note",         text});
@@ -423,8 +423,8 @@ UX_FLOW(ux_txn_flow,
   &txn_flow_0,
   &txn_flow_1,
   &txn_flow_2,
-  &txn_flow_3,
-  &txn_flow_4,
+  // &txn_flow_3,
+  // &txn_flow_4,
   &txn_flow_5,
   &txn_flow_6,
   &txn_flow_7,
