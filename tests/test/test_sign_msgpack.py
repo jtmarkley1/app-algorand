@@ -12,7 +12,7 @@ from . import speculos
 
 
 labels = {
-    'txn type', 'sender', 'fee', 'first valid', 'last valid',
+    'review', 'txn type', 'sender', 'fee', 'first valid', 'last valid',
     'genesis', 'note', 'receiver', 'amount', 'sign'
 }
 
