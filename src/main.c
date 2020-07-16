@@ -35,7 +35,8 @@ unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 #define INS_SIGN_MSGPACK    0x08
 
 /* The transaction that we might ask the user to approve. */
-struct txn current_txn;
+txn_t current_txn;
+already_computed_key_t current_pubkey;
 
 /* A buffer for collecting msgpack-encoded transaction via APDUs,
  * as well as for msgpack-encoding transaction prior to signing.
@@ -120,6 +121,12 @@ copy_and_advance(void *dst, uint8_t **p, size_t len)
   *p += len;
 }
 
+void init_globals(){
+  memset(&current_txn, 0, sizeof(current_txn));
+  memset(&current_pubkey, 0, sizeof(current_pubkey));
+  fetch_public_key(0, text);
+}
+
 static void
 algorand_main(void)
 {
@@ -145,6 +152,8 @@ algorand_main(void)
                 // an error
         rx = io_exchange(CHANNEL_APDU | flags, rx);
         flags = 0;
+
+        PRINTF("New APDU received:\n%.*H\n", rx, G_io_apdu_buffer);
 
         // no apdu received, well, reset the session, and reset the
         // bootloader configuration
@@ -267,7 +276,6 @@ algorand_main(void)
         } break;
 
         case INS_GET_PUBLIC_KEY: {
-          cx_ecfp_private_key_t privateKey;
           uint32_t accountId = 0;
           char checksummed[65];
           uint8_t user_approval_required = G_io_apdu_buffer[OFFSET_P1] == P1_WITH_REQUEST_USER_APPROVAL;
@@ -285,9 +293,7 @@ algorand_main(void)
            * Push derived key to `G_io_apdu_buffer`
            * and return pushed buffer length.
            */
-          algorand_key_derive(accountId, &privateKey);
-          algorand_public_key(&privateKey, G_io_apdu_buffer);
-          memset(&privateKey, 0, sizeof(privateKey));
+          fetch_public_key(accountId, G_io_apdu_buffer);
 
           if(user_approval_required){
             checksummed_addr(G_io_apdu_buffer, checksummed);
@@ -451,16 +457,14 @@ main(void)
         USB_power(0);
         USB_power(1);
 
-        // Display a loading screen before (slowly) deriving keys. BLE_power
-        // also seems to be a bit slow, so show the loading screen here.
-        ui_loading();
-
 #if defined(TARGET_NANOX)
         BLE_power(0, NULL);
         BLE_power(1, "Nano X");
 #endif
 
         ui_idle();
+
+        init_globals();
 
         algorand_main();
       }
