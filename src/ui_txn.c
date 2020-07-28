@@ -14,7 +14,7 @@ char caption[20];
 static char *
 u64str(uint64_t v)
 {
-  static char buf[24];
+  static char buf[27];
 
   char *p = &buf[sizeof(buf)];
   *(--p) = '\0';
@@ -30,6 +30,80 @@ u64str(uint64_t v)
   }
 
   return p;
+}
+
+bool adjustDecimals(char *src, uint32_t srcLength, char *target,
+                    uint32_t targetLength, uint8_t decimals) {
+    uint32_t startOffset;
+    uint32_t lastZeroOffset = 0;
+    uint32_t offset = 0;
+    if ((srcLength == 1) && (*src == '0')) {
+        if (targetLength < 2) {
+                return false;
+        }
+        target[0] = '0';
+        target[1] = '\0';
+        return true;
+    }
+    if (srcLength <= decimals) {
+        uint32_t delta = decimals - srcLength;
+        if (targetLength < srcLength + 1 + 2 + delta) {
+            return false;
+        }
+        target[offset++] = '0';
+        target[offset++] = '.';
+        for (uint32_t i = 0; i < delta; i++) {
+            target[offset++] = '0';
+        }
+        startOffset = offset;
+        for (uint32_t i = 0; i < srcLength; i++) {
+            target[offset++] = src[i];
+        }
+        target[offset] = '\0';
+    } else {
+        uint32_t sourceOffset = 0;
+        uint32_t delta = srcLength - decimals;
+        if (targetLength < srcLength + 1 + 1) {
+            return false;
+        }
+        while (offset < delta) {
+            target[offset++] = src[sourceOffset++];
+        }
+        if (decimals != 0) {
+            target[offset++] = '.';
+        }
+        startOffset = offset;
+        while (sourceOffset < srcLength) {
+            target[offset++] = src[sourceOffset++];
+        }
+  target[offset] = '\0';
+    }
+    for (uint32_t i = startOffset; i < offset; i++) {
+        if (target[i] == '0') {
+            if (lastZeroOffset == 0) {
+                lastZeroOffset = i;
+            }
+        } else {
+            lastZeroOffset = 0;
+        }
+    }
+    if (lastZeroOffset != 0) {
+        target[lastZeroOffset] = '\0';
+        if (target[lastZeroOffset - 1] == '.') {
+                target[lastZeroOffset - 1] = '\0';
+        }
+    }
+    return true;
+}
+
+char* amount_to_str(uint64_t amount){
+  char* result = u64str(amount);
+  char tmp[24];
+  memcpy(tmp, result, sizeof(tmp));
+  memset(result, 0, sizeof(tmp));
+  adjustDecimals(tmp, strlen(tmp), result, 27, ALGORAND_DECIMALS);
+  result[26] = '\0';
+  return result;
 }
 
 static int
@@ -86,7 +160,7 @@ static int step_sender() {
 }
 
 static int step_fee() {
-  ui_text_put(u64str(current_txn.fee));
+  ui_text_put(amount_to_str(current_txn.fee));
   return 1;
 }
 
@@ -155,7 +229,7 @@ static int step_receiver() {
 }
 
 static int step_amount() {
-  ui_text_put(u64str(current_txn.payment.amount));
+  ui_text_put(amount_to_str(current_txn.payment.amount));
   return 1;
 }
 
@@ -190,7 +264,7 @@ static int step_asset_xfer_id() {
 }
 
 static int step_asset_xfer_amount() {
-  ui_text_put(u64str(current_txn.asset_xfer.amount));
+  ui_text_put(amount_to_str(current_txn.asset_xfer.amount));
   return 1;
 }
 
@@ -367,14 +441,14 @@ typedef struct{
 screen_t const screen_table[] = {
   {"Txn type", &step_txn_type, ALL_TYPES},
   {"Sender", &step_sender, ALL_TYPES},
-  {"Fee (uAlg)", &step_fee, ALL_TYPES},
+  {"Fee (Alg)", &step_fee, ALL_TYPES},
   // {"First valid", step_firstvalid, ALL_TYPES},
   // {"Last valid", step_lastvalid, ALL_TYPES},
   {"Genesis ID", &step_genesisID, ALL_TYPES},
   {"Genesis hash", &step_genesisHash, ALL_TYPES},
   {"Note", &step_note, ALL_TYPES},
   {"Receiver", &step_receiver, PAYMENT},
-  {"Amount (uAlg)", step_amount, PAYMENT},
+  {"Amount (Alg)", step_amount, PAYMENT},
   {"Close to", &step_close, PAYMENT},
   {"Vote PK", &step_votepk, KEYREG},
   {"VRF PK", &step_vrfpk, KEYREG},
@@ -544,14 +618,14 @@ void ui_txn(void) {
   PRINTF("Transaction:\n");
   PRINTF("  Type: %d\n", current_txn.type);
   PRINTF("  Sender: %.*h\n", 32, current_txn.sender);
-  PRINTF("  Fee: %s\n", u64str(current_txn.fee));
+  PRINTF("  Fee: %s\n", amount_to_str(current_txn.fee));
   PRINTF("  First valid: %s\n", u64str(current_txn.firstValid));
   PRINTF("  Last valid: %s\n", u64str(current_txn.lastValid));
   PRINTF("  Genesis ID: %.*s\n", 32, current_txn.genesisID);
   PRINTF("  Genesis hash: %.*h\n", 32, current_txn.genesisHash);
   if (current_txn.type == PAYMENT) {
     PRINTF("  Receiver: %.*h\n", 32, current_txn.payment.receiver);
-    PRINTF("  Amount: %s\n", u64str(current_txn.payment.amount));
+    PRINTF("  Amount: %s\n", amount_to_str(current_txn.payment.amount));
     PRINTF("  Close to: %.*h\n", 32, current_txn.payment.close);
   }
   if (current_txn.type == KEYREG) {
