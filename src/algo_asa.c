@@ -22,6 +22,7 @@ static const algo_asset_info_t algo_assets[] = {
     ALGO_ASA(438832, "Micro-Microsoft",             "M-MSFT",      0),
     ALGO_ASA(438831, "MESE Index Fund",             "MESX",        6),
     ALGO_ASA(438828, "MESE USD Exchange Token",     "USD-MESE",    6),
+    ALGO_ASA(31566704, "USDC",                      "USDC",        6),
     ALGO_ASA(312769, "Tether USDt",                 "USDt",        6),
     ALGO_ASA(163650, "Asia Reserve Currency Coin",  "ARCC",        6),
 };
